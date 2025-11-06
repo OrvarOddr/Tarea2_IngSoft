@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Runas y Forja · Mueblería Los Muebles Hermanos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Uncial+Antiqua&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="hero hero--sub">
+      <div class="hero__overlay"></div>
+      <nav class="nav">
+        <span class="nav__brand">Los Muebles Hermanos</span>
+        <ul class="nav__links">
+          <li><a class="nav__link" href="index.html">Portal</a></li>
+          <li><a class="nav__link" href="catalogo.html">Arsenal</a></li>
+          <li><a class="nav__link" href="runas.html">Runas</a></li>
+          <li><a class="nav__link" href="tributos.html">Tributos</a></li>
+        </ul>
+      </nav>
+      <div class="hero__content">
+        <h1>Runas y forja avanzada</h1>
+        <p>
+          Analiza cada variación, calcula el tributo final y diseña combinaciones legendarias antes de llevarlas al
+          taller.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#variationsSection">Explorar runas</a>
+          <a class="btn btn--ghost" href="catalogo.html">Volver al arsenal</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout layout--sub">
+      <section class="card card--pattern" id="variationsSection">
+        <header class="section-header">
+          <div>
+            <h2>Panel de variaciones</h2>
+            <p>Selecciona una reliquia para ver sus runas activas, ajustes y tributos finales.</p>
+          </div>
+          <div class="section-actions">
+            <button id="toggleVariaciones" class="btn btn--ghost">Mostrar todas las variaciones</button>
+            <a class="btn btn--primary" href="tributos.html" target="_blank" rel="noopener">Abrir tributos</a>
+          </div>
+        </header>
+
+        <div class="catalog">
+          <div class="catalog__list" id="mueblesList">
+            <div class="empty-state">
+              <span class="empty-state__emoji">🛋️</span>
+              <p>Haz clic sobre una reliquia para revelar sus runas y tributos estimados.</p>
+            </div>
+          </div>
+          <div class="variations">
+            <div class="variations__illustration" id="variationsArtwork" data-type="NONE"></div>
+            <div class="variations__content">
+              <h3 id="variationsTitle">Selecciona una reliquia del catálogo</h3>
+              <p id="variationsDescription">
+                Cuando elijas un mueble, aquí aparecerán sus detalles, combinaciones rúnicas y valores sugeridos.
+              </p>
+              <div class="variations__stats">
+                <div class="variations__stat">
+                  <span class="variations__stat-label">Variaciones activas</span>
+                  <strong class="variations__stat-value" id="variationsActive">0</strong>
+                </div>
+                <div class="variations__stat">
+                  <span class="variations__stat-label">Variaciones inactivas</span>
+                  <strong class="variations__stat-value" id="variationsInactive">0</strong>
+                </div>
+                <div class="variations__stat">
+                  <span class="variations__stat-label">Tributo base</span>
+                  <strong class="variations__stat-value" id="variationsBasePrice">—</strong>
+                </div>
+                <div class="variations__stat">
+                  <span class="variations__stat-label">Stock disponible</span>
+                  <strong class="variations__stat-value" id="variationsStock">—</strong>
+                </div>
+              </div>
+              <ul class="variations__list" id="variationsList">
+                <li class="variations__placeholder">Explora el catálogo para visualizar las runas disponibles.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Forjado con fuego y honor para el clan · Mueblería Los Muebles Hermanos</p>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

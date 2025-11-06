@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mueblería Los Muebles Hermanos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Uncial+Antiqua&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__overlay"></div>
+      <nav class="nav">
+        <span class="nav__brand">Los Muebles Hermanos</span>
+        <ul class="nav__links">
+          <li><a class="nav__link" href="index.html">Portal</a></li>
+          <li><a class="nav__link" href="catalogo.html">Arsenal</a></li>
+          <li><a class="nav__link" href="runas.html">Runas</a></li>
+          <li><a class="nav__link" href="tributos.html">Tributos</a></li>
+        </ul>
+      </nav>
+      <div class="hero__content">
+        <h1>Forja mobiliario digno de la sala del Jarl</h1>
+        <p>
+          Administra tu bastión de muebles, controla tributos de stock y lanza cotizaciones relámpago. Toda la fuerza
+          del clan Viking en una sola plataforma.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" id="ctaCatalog" href="catalogo.html">Abrir el arsenal</a>
+          <a class="btn btn--ghost" id="ctaQuote" href="tributos.html">Levantar nueva cotización</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout layout--hub">
+      <section class="card hub-intro">
+        <header>
+          <h2>Portal del Clan</h2>
+          <p>Ingresa al área que necesites y abre una nueva pestaña para trabajar sin perder el control del salón principal.</p>
+        </header>
+        <div class="hub-grid">
+          <article class="hub-card">
+            <h3>Consejo y Arsenal</h3>
+            <p>Gestiona el catálogo completo, revisa estadísticas en tiempo real y crea nuevas reliquias.</p>
+            <a class="btn btn--primary" href="catalogo.html" target="_blank" rel="noopener">Abrir catálogo</a>
+          </article>
+          <article class="hub-card">
+            <h3>Runas y Forja</h3>
+            <p>Explora variaciones, calcula tributos sugeridos y prepara combinaciones legendarias.</p>
+            <a class="btn btn--primary" href="runas.html" target="_blank" rel="noopener">Abrir runas</a>
+          </article>
+          <article class="hub-card">
+            <h3>Tributos y Ventas</h3>
+            <p>Construye cotizaciones, confirma ventas y monitorea el historial de tributos del clan.</p>
+            <a class="btn btn--primary" href="tributos.html" target="_blank" rel="noopener">Abrir tributos</a>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Forjado con fuego y honor para el clan · Mueblería Los Muebles Hermanos</p>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

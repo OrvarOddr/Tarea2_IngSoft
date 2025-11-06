@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Arsenal del Clan · Mueblería Los Muebles Hermanos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Uncial+Antiqua&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="hero hero--sub">
+      <div class="hero__overlay"></div>
+      <nav class="nav">
+        <span class="nav__brand">Los Muebles Hermanos</span>
+        <ul class="nav__links">
+          <li><a class="nav__link" href="index.html">Portal</a></li>
+          <li><a class="nav__link" href="catalogo.html">Arsenal</a></li>
+          <li><a class="nav__link" href="runas.html">Runas</a></li>
+          <li><a class="nav__link" href="tributos.html">Tributos</a></li>
+        </ul>
+      </nav>
+      <div class="hero__content">
+        <h1>Arsenal del clan</h1>
+        <p>
+          Supervisa las reliquias del salón: mantén el catálogo, gestiona el stock y prepara nuevas piezas para el
+          próximo festín.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#catalogSection">Ir al catálogo</a>
+          <a class="btn btn--ghost" href="#statsSection">Ver consejo</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout layout--sub">
+      <section class="card stats" id="statsSection">
+        <header class="section-header">
+          <div>
+            <h2>Consejo del Clan</h2>
+            <p>Observa los números vitales de la mueblería: stock disponible, variaciones activas y cotizaciones exitosas.</p>
+          </div>
+        </header>
+        <div class="stats__grid">
+          <article class="stat-card">
+            <h3>Total de reliquias</h3>
+            <p class="stat-card__value" id="statsTotalMuebles">0</p>
+            <span class="stat-card__hint">Muebles registrados en el catálogo</span>
+          </article>
+          <article class="stat-card">
+            <h3>Reservas de inventario</h3>
+            <p class="stat-card__value" id="statsTotalStock">0</p>
+            <span class="stat-card__hint">Unidades listas para la batalla comercial</span>
+          </article>
+          <article class="stat-card">
+            <h3>Variaciones rúnicas</h3>
+            <p class="stat-card__value" id="statsVariacionesActivas">0</p>
+            <span class="stat-card__hint">Personalizaciones activas en el catálogo</span>
+          </article>
+          <article class="stat-card">
+            <h3>Ventas confirmadas</h3>
+            <p class="stat-card__value" id="statsVentasConfirmadas">0</p>
+            <span class="stat-card__hint">Cotizaciones convertidas en tributos</span>
+          </article>
+          <article class="stat-card stat-card--wide">
+            <h3>Reliquia legendaria</h3>
+            <p class="stat-card__value stat-card__value--lg" id="statsReliquiaNombre">—</p>
+            <span class="stat-card__hint">Tributo estimado: <span id="statsReliquiaValor">—</span></span>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" id="catalogSection">
+        <header class="section-header">
+          <div>
+            <h2>Arsenal disponible</h2>
+            <p>Perfecciona cada reliquia. Agrega muebles, ajusta variaciones y controla el estado de cada pieza.</p>
+          </div>
+          <div class="section-actions">
+            <input type="search" id="searchMuebles" class="input" placeholder="Busca reliquias, materiales o runas">
+            <select id="filterTipo" class="input input--select">
+              <option value="">Todos los tipos</option>
+              <option value="SILLA">Sillas y bancos</option>
+              <option value="SILLON">Sillones y tronos</option>
+              <option value="MESA">Mesas</option>
+              <option value="ESTANTE">Estantes</option>
+              <option value="CAJON">Cajones y cofres</option>
+              <option value="OTRO">Otros</option>
+            </select>
+            <select id="orderMuebles" class="input input--select">
+              <option value="precio-desc">Precio: mayor a menor</option>
+              <option value="precio-asc">Precio: menor a mayor</option>
+              <option value="stock-desc">Stock: mayor a menor</option>
+            </select>
+            <select id="filterEstado" class="input input--select">
+              <option value="">Todos los estados</option>
+              <option value="ACTIVO">Activos</option>
+              <option value="INACTIVO">Inactivos</option>
+            </select>
+            <button id="refreshCatalog" class="btn btn--ghost">Actualizar</button>
+          </div>
+        </header>
+
+        <div class="catalog">
+          <div class="catalog__list" id="mueblesList">
+            <div class="empty-state">
+              <span class="empty-state__emoji">🛋️</span>
+              <p>Tu catálogo aparecerá aquí. Carga los datos iniciales o crea un nuevo mueble.</p>
+            </div>
+          </div>
+          <aside class="catalog__form">
+            <h3>Nuevo mueble</h3>
+            <form id="muebleForm" class="form">
+              <label class="form__field">
+                <span>Nombre</span>
+                <input name="nombre" class="input" placeholder="Ej: Banco Vikingo" required>
+              </label>
+              <label class="form__field">
+                <span>Tipo</span>
+                <select name="tipo" class="input input--select" required>
+                  <option value="" disabled selected>Selecciona…</option>
+                  <option value="SILLA">Silla</option>
+                  <option value="SILLON">Sillón</option>
+                  <option value="MESA">Mesa</option>
+                  <option value="ESTANTE">Estante</option>
+                  <option value="CAJON">Cajonera</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </label>
+              <label class="form__field">
+                <span>Precio base</span>
+                <input name="precioBase" class="input" type="number" min="0" step="100" placeholder="55000" required>
+              </label>
+              <label class="form__field">
+                <span>Stock</span>
+                <input name="stock" class="input" type="number" min="0" placeholder="10" required>
+              </label>
+              <label class="form__field">
+                <span>Estado</span>
+                <select name="estado" class="input input--select" required>
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </label>
+              <label class="form__field">
+                <span>Tamaño</span>
+                <select name="tamano" class="input input--select" required>
+                  <option value="GRANDE">Grande</option>
+                  <option value="MEDIANO">Mediano</option>
+                  <option value="PEQUENO">Pequeño</option>
+                </select>
+              </label>
+              <label class="form__field">
+                <span>Material</span>
+                <input name="material" class="input" placeholder="Roble, cuero..." required>
+              </label>
+              <button type="submit" class="btn btn--primary btn--full">Guardar mueble</button>
+              <p class="form__feedback" id="muebleFeedback"></p>
+            </form>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Forjado con fuego y honor para el clan · Mueblería Los Muebles Hermanos</p>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

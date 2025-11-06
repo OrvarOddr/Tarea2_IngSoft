@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tributos y Ventas · Mueblería Los Muebles Hermanos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Uncial+Antiqua&display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="hero hero--sub">
+      <div class="hero__overlay"></div>
+      <nav class="nav">
+        <span class="nav__brand">Los Muebles Hermanos</span>
+        <ul class="nav__links">
+          <li><a class="nav__link" href="index.html">Portal</a></li>
+          <li><a class="nav__link" href="catalogo.html">Arsenal</a></li>
+          <li><a class="nav__link" href="runas.html">Runas</a></li>
+          <li><a class="nav__link" href="tributos.html">Tributos</a></li>
+        </ul>
+      </nav>
+      <div class="hero__content">
+        <h1>Tributos y ventas</h1>
+        <p>
+          Construye cotizaciones épicas, confirma ventas y lleva un registro de los tributos que entran al gran salón.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#quoteSection">Ir al taller</a>
+          <a class="btn btn--ghost" href="runas.html">Revisar runas</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout layout--sub">
+      <section class="card" id="quoteSection">
+        <header class="section-header">
+          <div>
+            <h2>Taller de tributos</h2>
+            <p>Combina muebles, variaciones y cantidades. Calcula totales en tiempo real y confirma la venta.</p>
+          </div>
+          <div class="section-actions">
+            <button id="loadQuotes" class="btn btn--ghost">Actualizar</button>
+            <a class="btn btn--primary" href="catalogo.html" target="_blank" rel="noopener">Catalogar nuevas reliquias</a>
+          </div>
+        </header>
+
+        <div class="quotes">
+          <div class="quotes__form">
+            <header class="quotes__form-header">
+              <div>
+                <h3>Arma tu cotización</h3>
+                <p>Selecciona muebles, agrega variaciones y define las cantidades. Calculamos el total automáticamente.</p>
+              </div>
+              <span class="quote-chip" title="Las cotizaciones solo se pueden confirmar con stock disponible">Validamos stock en tiempo real</span>
+            </header>
+            <form id="cotizacionForm" class="form">
+              <div class="form__group">
+                <label class="form__field">
+                  <span>Mueble</span>
+                  <select id="cotizacionMueble" class="input input--select" required>
+                    <option value="" disabled selected>Selecciona un mueble</option>
+                  </select>
+                </label>
+                <label class="form__field">
+                  <span>Variación</span>
+                  <select id="cotizacionVariacion" class="input input--select">
+                    <option value="">Sin variación</option>
+                  </select>
+                </label>
+                <label class="form__field">
+                  <span>Cantidad</span>
+                  <input id="cotizacionCantidad" class="input" type="number" min="1" value="1">
+                </label>
+                <button type="button" id="addItem" class="btn btn--primary btn--icon">
+                  <span>Agregar ítem</span>
+                </button>
+              </div>
+              <div id="cotizacionPreview" class="quote-preview">
+                <p class="quote-preview__empty">Selecciona una reliquia para comenzar.</p>
+              </div>
+              <button type="submit" class="btn btn--primary btn--full">Crear cotización</button>
+              <p class="form__feedback" id="cotizacionFeedback"></p>
+            </form>
+          </div>
+
+          <div class="quotes__list">
+            <h3>Cotizaciones recientes</h3>
+            <div id="cotizacionesList" class="quote-list">
+              <div class="empty-state">
+                <span class="empty-state__emoji">🧾</span>
+                <p>Aún no se han generado cotizaciones. Crea una para visualizarla aquí.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Forjado con fuego y honor para el clan · Mueblería Los Muebles Hermanos</p>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
