@@ -81,7 +81,7 @@ docker compose down -v
 ./mvnw spring-boot:run
 ```
 
-La aplicación escucha en `http://localhost:8080`.
+La aplicación escucha en `http://localhost:8081` por defecto (puedes sobreescribir con `SERVER_PORT=8080 ./mvnw spring-boot:run`).
 
 ### 5.3 Frontend estático (opcionales)
 
@@ -94,7 +94,7 @@ npx serve frontend              # o
 python3 -m http.server --directory frontend 5173
 ```
 
-El frontend asume que la API está en `http://localhost:8080/api`, pero puedo cambiarlo desde consola:
+El frontend asume que la API está en `http://localhost:8081/api` en local; puedo cambiarlo desde consola:
 
 ```js
 localStorage.setItem("muebleshermanos_api", "https://mi-backend/api");

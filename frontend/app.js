@@ -1,4 +1,4 @@
-const API_BASE = localStorage.getItem("muebleshermanos_api") || "http://localhost:8080/api";
+const API_BASE = localStorage.getItem("muebleshermanos_api") || "http://localhost:8081/api";
 
 const state = {
   muebles: [],
