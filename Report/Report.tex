@@ -1,0 +1,280 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{colortbl}
+
+\geometry{margin=2.5cm}
+\setstretch{1.25}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=blue!70!black
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rfoot{\thepage}
+\lhead{Tarea 2 - Ingeniería de Software}
+\rhead{Universidad del Bío-Bío | Sección 1}
+
+\definecolor{lightgray}{gray}{0.95}
+\definecolor{softblue}{RGB}{219,230,255}
+\definecolor{tablehead}{RGB}{0,76,153}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    backgroundcolor=\color{lightgray},
+    frame=single,
+    rulecolor=\color{gray!60},
+    keywordstyle=\color{blue!60!black}\bfseries,
+    commentstyle=\color{gray!90},
+    stringstyle=\color{purple!70!black}
+}
+
+\begin{document}
+
+% PORTADA
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    {\Large \textbf{Universidad del Bío-Bío}}\\[0.3cm]
+    {\large Ingeniería Civil en Informática}\\[1.5cm]
+
+    \rule{\linewidth}{0.6pt}\\[0.5cm]
+    {\huge \bfseries Tarea 2: ``Mueblería Los Muebles Hermanos''}\\[0.4cm]
+    \rule{\linewidth}{0.6pt}\\[2cm]
+
+    {\Large \textbf{Curso:} Ingeniería de Software – S1 2025}\\[0.3cm]
+    {\Large \textbf{Sección:} 1}\\[2cm]
+
+    {\large \textbf{Integrantes:}}\\[0.3cm]
+    {\large Alejandro Ortiz Ortega}\\[1cm]
+
+    {\large \textbf{Profesor:}}\\[0.3cm]
+    {\large Roberto Anabalón}\\[2cm]
+
+    \vfill
+    {\large Chillán, Noviembre de 2025}
+\end{titlepage}
+
+% INDICE
+\tableofcontents
+\newpage
+
+% ENUNCIADO
+\section{Enunciado}
+Se solicitó construir un backend completo para la mueblería ficticia \textbf{``Los Muebles Hermanos''}, aplicando buenas prácticas de \textbf{Ingeniería de Software}. El sistema debía:
+\begin{itemize}
+    \item Exponer una API REST para gestionar catálogo de muebles, variaciones de precio, cotizaciones y ventas.
+    \item Persistir la información en MySQL (H2 en modo pruebas) usando \textbf{Spring Data JPA}.
+    \item Incorporar patrones de diseño (Strategy + Factory) para calcular precios con variaciones.
+    \item Entregar datos de ejemplo y pruebas automatizadas que validaran los flujos críticos.
+\end{itemize}
+
+\subsection*{Alcance}
+La aplicación debía permitir:
+\begin{itemize}
+    \item CRUD de muebles con atributos como tipo, tamaño, material, precio base, stock y estado.
+    \item CRUD de variaciones asociadas a cada mueble, habilitando estrategias aditivas y porcentuales.
+    \item Creación, confirmación y cancelación de cotizaciones, validando stock y estados antes de confirmar ventas.
+    \item Entrega de datos iniciales para probar el flujo completo junto a un pequeño frontend estático.
+\end{itemize}
+
+\newpage
+
+\section{Solución}
+Se implementó una API REST con \textbf{Spring Boot 3.5} y \textbf{Java 21}, organizada en capas (Controller $\rightarrow$ Service $\rightarrow$ Repository). Se usaron DTOs y mapeadores para desacoplar la API de las entidades JPA. El repositorio completo se encuentra en:\\[0.2cm]
+\href{https://github.com/OrvarOddr/Tarea2_IngSoft}{\texttt{github.com/OrvarOddr/Tarea2\_IngSoft}}
+
+\subsection*{Modelo de dominio}
+El dominio principal se basa en cuatro entidades: \texttt{Mueble}, \texttt{Variacion}, \texttt{Cotizacion} y \texttt{CotizacionItem}. El mueble contiene los atributos de catálogo y se relaciona con sus variaciones:
+\begin{lstlisting}[language=Java, caption={Entidad Mueble con atributos de catálogo}]
+@Entity
+@Table(name = "mueble")
+public class Mueble {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(name = "nombre_mueble", nullable = false)
+    private String nombre;
+    @Enumerated(EnumType.STRING) private TipoMueble tipo;
+    @Column(name = "precio_base", nullable = false, precision = 12, scale = 2)
+    private BigDecimal precioBase;
+    @Column(nullable = false) private Integer stock;
+    @Enumerated(EnumType.STRING) private EstadoMueble estado;
+    @Enumerated(EnumType.STRING) private Tamano tamano;
+    @Column(nullable = false) private String material;
+    @OneToMany(mappedBy = "mueble", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Variacion> variaciones = new ArrayList<>();
+}
+\end{lstlisting}
+
+\newpage
+
+\subsection*{Estrategias de precio}
+Para soportar variaciones aditivas, porcentuales o nulas se implementó el patrón \textbf{Strategy} más una \textbf{Factory} que selecciona la estrategia adecuada. Esto evita usar condicionales en los servicios y permite extender fácilmente nuevas estrategias:
+\begin{lstlisting}[language=Java, caption={Factory que resuelve la estrategia de precio}]
+@Component
+public class PriceCalculatorFactory {
+    private final Map<PriceStrategyType, PriceCalculator> calculatorMap;
+    public PriceCalculatorFactory(List<PriceCalculator> calculators) {
+        this.calculatorMap = calculators.stream()
+            .collect(Collectors.toMap(
+                PriceCalculator::getType,
+                Function.identity(),
+                (first, second) -> first,
+                () -> new EnumMap<>(PriceStrategyType.class)));
+    }
+    public PriceCalculator getCalculator(PriceStrategyType type) {
+        return calculatorMap.getOrDefault(type, calculatorMap.get(PriceStrategyType.NONE));
+    }
+}
+\end{lstlisting}
+
+\newpage 
+
+\subsection*{Reglas de negocio}
+Las reglas principales viven en los servicios. La creación y confirmación de cotizaciones validan stock, estado del mueble y pertenencia de variaciones antes de calcular precios:
+\begin{lstlisting}[language=Java, caption={Validaciones al crear y confirmar cotizaciones}]
+public Cotizacion crearCotizacion(CotizacionRequest request) {
+    if (request.items().isEmpty()) {
+        throw new BusinessException("La cotizacion debe contener al menos un mueble");
+    }
+    Cotizacion cotizacion = new Cotizacion();
+    for (CotizacionItemRequest itemRequest : request.items()) {
+        CotizacionItem item = construirItem(itemRequest);
+        cotizacion.addItem(item);
+    }
+    return cotizacionRepository.save(cotizacion);
+}
+
+public Cotizacion confirmarCotizacion(Long id) {
+    Cotizacion cotizacion = obtener(id);
+    if (cotizacion.getEstado() != EstadoCotizacion.CREADA) {
+        throw new BusinessException("Solo se pueden confirmar cotizaciones en estado CREADA");
+    }
+    cotizacion.getItems().forEach(item -> {
+        Mueble mueble = muebleRepository.findById(item.getMueble().getId())
+            .orElseThrow(() -> new ResourceNotFoundException("No existe mueble con id " + item.getMueble().getId()));
+        if (mueble.getEstado() != EstadoMueble.ACTIVO) {
+            throw new BusinessException("El mueble " + mueble.getNombre() + " no está disponible");
+        }
+        if (mueble.getStock() < item.getCantidad()) {
+            throw new BusinessException("Stock insuficiente para el mueble " + mueble.getNombre());
+        }
+        mueble.setStock(mueble.getStock() - item.getCantidad());
+        muebleRepository.save(mueble);
+        item.setMueble(mueble);
+    });
+    cotizacion.setEstado(EstadoCotizacion.CONFIRMADA);
+    return cotizacion;
+}
+\end{lstlisting}
+
+\subsection*{API REST y DTOs}
+Los controladores exponen endpoints REST y delegan lógica a los servicios, mapeando entidades a DTOs para evitar exponer el modelo JPA:
+\begin{lstlisting}[language=Java, caption={Controlador del catálogo de muebles}]
+@RestController
+@RequestMapping("/api/muebles")
+public class MuebleController {
+    private final MuebleService muebleService;
+    private final CatalogMapper catalogMapper;
+
+    @GetMapping
+    public List<MuebleResponse> listar(@RequestParam(name = "estado", required = false) EstadoMueble estado) {
+        return muebleService.listar(estado)
+            .stream()
+            .map(catalogMapper::toResponse)
+            .collect(Collectors.toList());
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public MuebleResponse crear(@Valid @RequestBody MuebleRequest request) {
+        Mueble creado = muebleService.crear(request);
+        return catalogMapper.toResponse(creado);
+    }
+}
+\end{lstlisting}
+
+\subsection*{Persistencia y datos iniciales}
+La configuración de base de datos reside en \texttt{application.properties}, con credenciales sobreescribibles por variables de entorno. El archivo \texttt{data.sql} carga datos de inicio (muebles, variaciones y cotizaciones) para validar rápidamente el flujo en local o con Docker Compose.
+
+\subsection*{Patrones de diseño aplicados}
+\begin{itemize}
+    \item \textbf{Strategy + Factory}: cada variación de precio implementa \texttt{PriceCalculator}; la \texttt{PriceCalculatorFactory} selecciona la estrategia sin \texttt{switch} en servicios, facilitando extensiones.
+    \item \textbf{Service Layer}: los servicios encapsulan reglas de negocio (validación de stock, estados y pertenencia de variaciones) y mantienen los controladores delgados.
+    \item \textbf{DTO + Mapper}: se usan DTOs de request/response y mapeadores para no exponer entidades JPA y garantizar contratos estables en la API.
+    \item \textbf{Repository (Spring Data JPA)}: acceso a datos desacoplado de la lógica; los repositorios definen solo interfaces, delegando la implementación a Spring.
+    \item \textbf{Exception Handling centralizado}: \texttt{GlobalExceptionHandler} traduce excepciones de negocio a respuestas HTTP coherentes, manteniendo controladores limpios.
+\end{itemize}
+
+\newpage
+
+\section{Pruebas}
+Se creó una batería de \textbf{JUnit 5} que verifica tanto la lógica de negocio como la fábrica de estrategias:
+\begin{itemize}
+    \item \texttt{PriceCalculatorFactoryTest} comprueba que cada estrategia calcule el precio correcto y que exista un fallback seguro al tipo \texttt{NONE}.
+    \item \texttt{CotizacionServiceTest} cubre creación de cotizaciones con variaciones, confirmación que descuenta stock y errores por inventario insuficiente.
+\end{itemize}
+
+\begin{lstlisting}[language=Java, caption={Prueba de cálculo porcentual y fallback}]
+@Test
+void devuelveEstrategiaPorcentaje() {
+    PriceCalculator calculator = factory.getCalculator(PriceStrategyType.PERCENTAGE);
+    BigDecimal resultado = calculator.calculate(new BigDecimal("1000"), new BigDecimal("10"));
+    assertThat(resultado).isEqualByComparingTo("1100.00");
+}
+
+@Test
+void usaEstrategiaPorDefectoCuandoNoExiste() {
+    PriceCalculator calculator = factory.getCalculator(PriceStrategyType.NONE);
+    BigDecimal resultado = calculator.calculate(new BigDecimal("1000"), new BigDecimal("999"));
+    assertThat(resultado).isEqualByComparingTo("1000");
+}
+\end{lstlisting}
+
+Todas las pruebas se ejecutan con una base H2 aislada y se disparan mediante \texttt{./mvnw test}, generando reportes en \texttt{target/surefire-reports/}.
+
+\newpage
+
+\section{Resultados y uso}
+\subsection*{Instrucciones para levantar el proyecto}
+\begin{itemize}
+    \item \textbf{Requisitos}: Docker + Docker Compose; o bien JDK 21, Maven Wrapper (\texttt{./mvnw}) y MySQL disponible en \texttt{localhost:3306} con el esquema \texttt{muebles\_db}.
+    \item \textbf{Docker Compose (recomendado)}: levanta la app y MySQL en segundos.
+    \begin{enumerate}[label=\arabic*.]
+        \item Construir y levantar: \texttt{docker compose build} seguido de \texttt{docker compose up -d}.
+        \item Ver logs de arranque: \texttt{docker compose logs app -f}.
+        \item Servicios expuestos: backend en \texttt{http://localhost:8080} y MySQL en \texttt{mysql://localhost:3306} (usuario/clave \texttt{muebles\_user}/\texttt{muebles\_pass}).
+        \item Para detener y limpiar: \texttt{docker compose down -v}.
+    \end{enumerate}
+    \item \textbf{Ejecución local (sin Docker)}:
+    \begin{enumerate}[label=\arabic*.]
+        \item Tener MySQL operativo y, si se requiere, sobreescribir credenciales con variables de entorno (\texttt{SPRING\_DATASOURCE\_URL}, \texttt{SPRING\_DATASOURCE\_USERNAME}, \texttt{SPRING\_DATASOURCE\_PASSWORD}).
+        \item Levantar la API con datos precargados: \texttt{./mvnw spring-boot:run}. Se expone en el puerto \textbf{8081} (puede cambiarse con \texttt{SERVER\_PORT=8080 ./mvnw spring-boot:run}).
+    \end{enumerate}
+    \item \textbf{Frontend estático}: el directorio \texttt{frontend/} consume \texttt{/api}. Puede servirse con \texttt{python3 -m http.server --directory frontend 5173} o \texttt{npx serve frontend}, apuntando a \texttt{http://localhost:8081/api} por defecto.
+    \item \textbf{Pruebas}: \texttt{./mvnw test} ejecuta JUnit sobre una base H2 aislada; los reportes quedan en \texttt{target/surefire-reports/}.
+\end{itemize}
+
+\section{Conclusión}
+El proyecto consolida el diseño en capas con Spring, aplicando patrones de estrategia y fábrica para extender reglas de precios sin modificar los servicios. Las pruebas automatizadas garantizan los casos críticos de negocio (cálculo de precios, validación de stock y transiciones de estado), mientras que Docker Compose facilita la reproducibilidad del ambiente. El resultado es un backend mantenible, probado y listo para ser consumido por el frontend o integraciones externas.
+
+\vspace{0.5cm}
+\noindent\textbf{Universidad del Bío-Bío – Ingeniería Civil en Informática}
+
+\end{document} 
