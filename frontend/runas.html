@@ -88,6 +88,51 @@
           </div>
         </div>
       </section>
+
+      <section class="card card--pattern">
+        <header class="section-header">
+          <div>
+            <h2>Gestionar runas</h2>
+            <p>Crea, edita, activa o elimina variaciones sobre el mueble seleccionado.</p>
+          </div>
+        </header>
+        <form id="variacionForm" class="form">
+          <div class="form__group">
+            <label class="form__field">
+              <span>Nombre</span>
+              <input id="variacionNombre" class="input" name="nombre" placeholder="Ej: Barniz premium" required>
+            </label>
+            <label class="form__field">
+              <span>Estrategia</span>
+              <select id="variacionEstrategia" class="input input--select" name="estrategia" required>
+                <option value="NONE">Sin cambio</option>
+                <option value="ADDITIVE">Aditiva (+/- monto)</option>
+                <option value="PERCENTAGE">Porcentaje (%)</option>
+              </select>
+            </label>
+            <label class="form__field">
+              <span>Valor de ajuste</span>
+              <input id="variacionValorAjuste" class="input" name="valor" type="number" step="0.01" required>
+            </label>
+            <label class="form__field form__field--switch">
+              <span>Activa</span>
+              <input id="variacionActiva" type="checkbox" checked>
+            </label>
+          </div>
+          <label class="form__field">
+            <span>Descripción</span>
+            <textarea id="variacionDescripcion" class="input" rows="2" placeholder="Notas para esta variación"></textarea>
+          </label>
+          <div class="form__actions">
+            <button type="submit" class="btn btn--primary" id="variacionSubmit">Agregar variación</button>
+            <button type="button" class="btn btn--ghost" id="cancelEditVariacion" style="display: none">Cancelar edición</button>
+          </div>
+          <p class="form__feedback" id="variacionFeedback"></p>
+          <p class="form__hint">
+            La variación se aplicará sobre el mueble seleccionado en el panel anterior. Cambia de mueble para editar sus runas.
+          </p>
+        </form>
+      </section>
     </main>
 
     <footer class="footer">

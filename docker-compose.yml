@@ -22,7 +22,9 @@ services:
       - mysql_data:/var/lib/mysql
 
   app:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: muebles_app
     depends_on:
       mysql:
@@ -32,9 +34,20 @@ services:
       SPRING_DATASOURCE_USERNAME: muebles_user
       SPRING_DATASOURCE_PASSWORD: muebles_pass
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SERVER_PORT: 8080
+      SERVER_PORT: 8081
     ports:
-      - "8080:8080"
+      - "8081:8081"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: muebles_frontend
+    depends_on:
+      - app
+    ports:
+      - "5173:80"
+    restart: unless-stopped
 
 volumes:
   mysql_data:

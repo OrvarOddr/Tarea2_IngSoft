@@ -775,6 +775,24 @@ body {
   color: var(--accent);
 }
 
+.form__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form__hint {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.form__field--switch {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
 .quotes {
   display: flex;
   flex-direction: column;

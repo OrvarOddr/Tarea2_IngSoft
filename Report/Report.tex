@@ -253,22 +253,22 @@ Todas las pruebas se ejecutan con una base H2 aislada y se disparan mediante \te
 
 \section{Resultados y uso}
 \subsection*{Instrucciones para levantar el proyecto}
-\begin{itemize}
-    \item \textbf{Requisitos}: Docker + Docker Compose; o bien JDK 21, Maven Wrapper (\texttt{./mvnw}) y MySQL disponible en \texttt{localhost:3306} con el esquema \texttt{muebles\_db}.
-    \item \textbf{Docker Compose (recomendado)}: levanta la app y MySQL en segundos.
-    \begin{enumerate}[label=\arabic*.]
-        \item Construir y levantar: \texttt{docker compose build} seguido de \texttt{docker compose up -d}.
-        \item Ver logs de arranque: \texttt{docker compose logs app -f}.
-        \item Servicios expuestos: backend en \texttt{http://localhost:8080} y MySQL en \texttt{mysql://localhost:3306} (usuario/clave \texttt{muebles\_user}/\texttt{muebles\_pass}).
-        \item Para detener y limpiar: \texttt{docker compose down -v}.
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Requisitos}: Docker + Docker Compose; o JDK 21 + \texttt{./mvnw} + MySQL en \texttt{localhost:3306} con el esquema \texttt{muebles\_db}.
+    \item \textbf{Docker Compose (recomendado)}: levanta app y MySQL en segundos.
+    \begin{enumerate}[label=\arabic*., leftmargin=0.85cm]
+        \item Construir y levantar:\\\texttt{docker compose build}\\\texttt{docker compose up -d}
+        \item Ver logs de arranque: \texttt{docker compose logs app -f}
+        \item Servicios: backend \texttt{http://localhost:8080}; MySQL \texttt{mysql://localhost:3306}\\(usuario/clave \texttt{muebles\_user}/\texttt{muebles\_pass})
+        \item Para detener y limpiar: \texttt{docker compose down -v}
     \end{enumerate}
     \item \textbf{Ejecución local (sin Docker)}:
-    \begin{enumerate}[label=\arabic*.]
-        \item Tener MySQL operativo y, si se requiere, sobreescribir credenciales con variables de entorno (\texttt{SPRING\_DATASOURCE\_URL}, \texttt{SPRING\_DATASOURCE\_USERNAME}, \texttt{SPRING\_DATASOURCE\_PASSWORD}).
-        \item Levantar la API con datos precargados: \texttt{./mvnw spring-boot:run}. Se expone en el puerto \textbf{8081} (puede cambiarse con \texttt{SERVER\_PORT=8080 ./mvnw spring-boot:run}).
+    \begin{enumerate}[label=\arabic*., leftmargin=0.85cm]
+        \item MySQL operativo; credenciales opcionales vía ambiente \texttt{SPRING\_DATASOURCE\_\{URL,USERNAME,PASSWORD\}}.
+        \item API con datos precargados: \texttt{./mvnw spring-boot:run}\\Puerto \textbf{8081} (cambiable con \texttt{SERVER\_PORT=8080 ./mvnw spring-boot:run}).
     \end{enumerate}
-    \item \textbf{Frontend estático}: el directorio \texttt{frontend/} consume \texttt{/api}. Puede servirse con \texttt{python3 -m http.server --directory frontend 5173} o \texttt{npx serve frontend}, apuntando a \texttt{http://localhost:8081/api} por defecto.
-    \item \textbf{Pruebas}: \texttt{./mvnw test} ejecuta JUnit sobre una base H2 aislada; los reportes quedan en \texttt{target/surefire-reports/}.
+    \item \textbf{Frontend estático}: \texttt{frontend/} consume \texttt{/api}. Servir con \texttt{python3 -m http.server --directory frontend 5173}\\o \texttt{npx serve frontend}. Por defecto llama a \texttt{http://localhost:8081/api}.
+    \item \textbf{Pruebas}: \texttt{./mvnw test} ejecuta JUnit sobre H2; reportes en \texttt{target/surefire-reports/}.
 \end{itemize}
 
 \section{Conclusión}

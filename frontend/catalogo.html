@@ -157,7 +157,12 @@
                 <span>Material</span>
                 <input name="material" class="input" placeholder="Roble, cuero..." required>
               </label>
-              <button type="submit" class="btn btn--primary btn--full">Guardar mueble</button>
+              <div class="form__actions">
+                <button type="submit" class="btn btn--primary btn--full" id="muebleSubmit">Guardar mueble</button>
+                <button type="button" class="btn btn--ghost btn--full" id="cancelEditMueble" style="display: none">
+                  Cancelar edición
+                </button>
+              </div>
               <p class="form__feedback" id="muebleFeedback"></p>
             </form>
           </aside>

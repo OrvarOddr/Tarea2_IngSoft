@@ -6,6 +6,8 @@ const state = {
   quoteItems: [],
   currentVariaciones: new Map(),
   selectedMuebleId: null,
+  editingMuebleId: null,
+  editingVariacionId: null,
   variacionesFilter: "ACTIVE",
   filters: {
     search: "",
@@ -25,6 +27,8 @@ const elements = {
   searchMuebles: document.getElementById("searchMuebles"),
   refreshCatalog: document.getElementById("refreshCatalog"),
   muebleForm: document.getElementById("muebleForm"),
+  muebleSubmit: document.getElementById("muebleSubmit"),
+  cancelEditMueble: document.getElementById("cancelEditMueble"),
   muebleFeedback: document.getElementById("muebleFeedback"),
   cotizacionForm: document.getElementById("cotizacionForm"),
   cotizacionFeedback: document.getElementById("cotizacionFeedback"),
@@ -51,6 +55,15 @@ const elements = {
   variationsBasePrice: document.getElementById("variationsBasePrice"),
   variationsStock: document.getElementById("variationsStock"),
   variationsArtwork: document.getElementById("variationsArtwork"),
+  variacionForm: document.getElementById("variacionForm"),
+  variacionNombre: document.getElementById("variacionNombre"),
+  variacionDescripcion: document.getElementById("variacionDescripcion"),
+  variacionValorAjuste: document.getElementById("variacionValorAjuste"),
+  variacionEstrategia: document.getElementById("variacionEstrategia"),
+  variacionActiva: document.getElementById("variacionActiva"),
+  variacionFeedback: document.getElementById("variacionFeedback"),
+  variacionSubmit: document.getElementById("variacionSubmit"),
+  cancelEditVariacion: document.getElementById("cancelEditVariacion"),
 };
 
 const formatCurrency = (value) =>
@@ -96,10 +109,17 @@ const fetchJson = async (endpoint, options = {}) => {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
-
+  const contentType = response.headers.get("content-type") || "";
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
+    const body = contentType.includes("application/json") ? await response.json().catch(() => ({})) : {};
     throw new Error(body.message || `Ocurrió un error (${response.status})`);
+  }
+  if (response.status === 204) {
+    return {};
+  }
+  if (!contentType.includes("application/json")) {
+    const text = await response.text();
+    return text ? JSON.parse(text) : {};
   }
   return response.json();
 };
@@ -120,6 +140,65 @@ const setFeedback = (element, message, isError = false) => {
       element.textContent = "";
     }, 3200);
   }
+};
+
+const resetMuebleForm = () => {
+  if (!elements.muebleForm) return;
+  elements.muebleForm.reset();
+  state.editingMuebleId = null;
+  if (elements.muebleSubmit) {
+    elements.muebleSubmit.textContent = "Guardar mueble";
+  }
+  if (elements.cancelEditMueble) {
+    elements.cancelEditMueble.style.display = "none";
+  }
+};
+
+const startMuebleEdit = (mueble) => {
+  if (!elements.muebleForm || !mueble) return;
+  state.editingMuebleId = mueble.id;
+  elements.muebleForm.nombre.value = mueble.nombre;
+  elements.muebleForm.tipo.value = mueble.tipo;
+  elements.muebleForm.precioBase.value = mueble.precioBase;
+  elements.muebleForm.stock.value = mueble.stock;
+  elements.muebleForm.estado.value = mueble.estado;
+  elements.muebleForm.tamano.value = mueble.tamano;
+  elements.muebleForm.material.value = mueble.material;
+  if (elements.muebleSubmit) {
+    elements.muebleSubmit.textContent = "Actualizar mueble";
+  }
+  if (elements.cancelEditMueble) {
+    elements.cancelEditMueble.style.display = "inline-flex";
+  }
+  elements.muebleForm.scrollIntoView({ behavior: "smooth", block: "center" });
+};
+
+const resetVariacionForm = () => {
+  if (!elements.variacionForm) return;
+  elements.variacionForm.reset();
+  state.editingVariacionId = null;
+  if (elements.variacionActiva) {
+    elements.variacionActiva.checked = true;
+  }
+  if (elements.variacionSubmit) {
+    elements.variacionSubmit.textContent = "Agregar variación";
+  }
+  if (elements.cancelEditVariacion) {
+    elements.cancelEditVariacion.style.display = "none";
+  }
+};
+
+const startVariacionEdit = (variacion) => {
+  if (!elements.variacionForm || !variacion) return;
+  state.editingVariacionId = variacion.id;
+  if (elements.variacionNombre) elements.variacionNombre.value = variacion.nombre || "";
+  if (elements.variacionDescripcion) elements.variacionDescripcion.value = variacion.descripcion || "";
+  if (elements.variacionValorAjuste) elements.variacionValorAjuste.value = variacion.valorAjuste;
+  if (elements.variacionEstrategia) elements.variacionEstrategia.value = variacion.priceStrategyType;
+  if (elements.variacionActiva) elements.variacionActiva.checked = !!variacion.activa;
+  if (elements.variacionSubmit) elements.variacionSubmit.textContent = "Actualizar variación";
+  if (elements.cancelEditVariacion) elements.cancelEditVariacion.style.display = "inline-flex";
+  elements.variacionForm.scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
 const renderMuebles = () => {
@@ -234,11 +313,14 @@ const renderMuebles = () => {
                   }
                 </span>
               </div>
-            <div class="mueble-card__variaciones">
+          <div class="mueble-card__variaciones">
               ${variacionesMarkup}
             </div>
           </div>
           <div class="mueble-card__actions">
+            <button class="btn btn--ghost" data-action="editMueble">
+              Editar
+            </button>
             <button class="btn btn--ghost" data-action="toggle" data-estado="${mueble.estado}">
               ${mueble.estado === "ACTIVO" ? "Marcar inactivo" : "Activar"}
             </button>
@@ -353,6 +435,17 @@ const renderVariacionesPanel = () => {
             <span>Ajuste: ${ajuste}</span>
             <span>Tributo final: ${formatCurrency(tributo)}</span>
           </div>
+          <div class="mueble-card__actions">
+            <button class="btn btn--ghost" data-var-action="edit" data-variacion-id="${variacion.id}">
+              Editar
+            </button>
+            <button class="btn btn--ghost" data-var-action="toggle" data-variacion-id="${variacion.id}" data-activa="${variacion.activa}">
+              ${variacion.activa ? "Desactivar" : "Activar"}
+            </button>
+            <button class="btn btn--ghost" data-var-action="delete" data-variacion-id="${variacion.id}">
+              Eliminar
+            </button>
+          </div>
         </li>`;
     })
     .join("");
@@ -369,6 +462,8 @@ const populateSelects = () => {
 };
 
 const loadVariaciones = (muebleId) => {
+  state.selectedMuebleId = Number(muebleId);
+  resetVariacionForm();
   const mueble = state.muebles.find((item) => item.id === Number(muebleId));
   const variaciones = mueble?.variaciones || [];
   state.currentVariaciones.set(muebleId, variaciones);
@@ -601,14 +696,22 @@ elements.muebleForm?.addEventListener("submit", async (event) => {
   };
 
   try {
-    await fetchJson("/muebles", { method: "POST", body: JSON.stringify(payload) });
-    event.target.reset();
-    setFeedback(elements.muebleFeedback, "Mueble agregado con éxito");
-    showToast("Mueble creado");
+    const isEdit = Boolean(state.editingMuebleId);
+    const endpoint = isEdit ? `/muebles/${state.editingMuebleId}` : "/muebles";
+    const method = isEdit ? "PUT" : "POST";
+
+    await fetchJson(endpoint, { method, body: JSON.stringify(payload) });
+    resetMuebleForm();
+    setFeedback(elements.muebleFeedback, isEdit ? "Mueble actualizado" : "Mueble agregado con éxito");
+    showToast(isEdit ? "Mueble actualizado" : "Mueble creado");
     loadMuebles();
   } catch (error) {
     setFeedback(elements.muebleFeedback, error.message, true);
   }
+});
+
+elements.cancelEditMueble?.addEventListener("click", () => {
+  resetMuebleForm();
 });
 
 elements.mueblesList?.addEventListener("click", async (event) => {
@@ -618,6 +721,15 @@ elements.mueblesList?.addEventListener("click", async (event) => {
   const card = button.closest("[data-id]");
   const id = card?.dataset.id;
   if (!id) return;
+
+  if (button.dataset.action === "editMueble") {
+    const mueble = state.muebles.find((item) => item.id === Number(id));
+    if (mueble) {
+      startMuebleEdit(mueble);
+      showToast("Editando mueble seleccionado");
+    }
+    return;
+  }
 
   if (button.dataset.action === "toggle") {
     const currentEstado = button.dataset.estado;
@@ -662,6 +774,100 @@ elements.mueblesList?.addEventListener("click", async (event) => {
     } else {
       smoothScroll("#variationsSection");
       showToast("Variaciones cargadas en el taller");
+    }
+  }
+});
+
+elements.variacionForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!state.selectedMuebleId) {
+    setFeedback(elements.variacionFeedback, "Selecciona un mueble para aplicar la variación", true);
+    return;
+  }
+
+  const nombre = elements.variacionNombre?.value?.trim();
+  const valorAjuste = Number(elements.variacionValorAjuste?.value ?? 0);
+  const priceStrategyType = elements.variacionEstrategia?.value;
+  const descripcion = elements.variacionDescripcion?.value ?? "";
+  const activa = elements.variacionActiva?.checked ?? true;
+
+  if (!nombre || Number.isNaN(valorAjuste)) {
+    setFeedback(elements.variacionFeedback, "Completa nombre y valor de ajuste", true);
+    return;
+  }
+
+  const payload = { nombre, descripcion, valorAjuste, priceStrategyType, activa };
+  const isEdit = Boolean(state.editingVariacionId);
+  const endpoint = isEdit
+    ? `/muebles/${state.selectedMuebleId}/variaciones/${state.editingVariacionId}`
+    : `/muebles/${state.selectedMuebleId}/variaciones`;
+  const method = isEdit ? "PUT" : "POST";
+
+  try {
+    await fetchJson(endpoint, { method, body: JSON.stringify(payload) });
+    setFeedback(elements.variacionFeedback, isEdit ? "Variación actualizada" : "Variación creada");
+    showToast(isEdit ? "Variación actualizada" : "Variación agregada");
+    resetVariacionForm();
+    loadMuebles();
+    loadVariaciones(state.selectedMuebleId);
+  } catch (error) {
+    setFeedback(elements.variacionFeedback, error.message, true);
+  }
+});
+
+elements.cancelEditVariacion?.addEventListener("click", () => {
+  resetVariacionForm();
+});
+
+elements.variationsList?.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-var-action]");
+  if (!button) return;
+  const variacionId = Number(button.dataset.variacionId);
+  const selectedMueble = state.muebles.find((mueble) => mueble.id === state.selectedMuebleId);
+  const variacion = selectedMueble?.variaciones.find((item) => item.id === variacionId);
+  if (!variacion || !state.selectedMuebleId) return;
+
+  if (button.dataset.varAction === "edit") {
+    startVariacionEdit(variacion);
+    return;
+  }
+
+  if (button.dataset.varAction === "toggle") {
+    const payload = {
+      nombre: variacion.nombre,
+      descripcion: variacion.descripcion,
+      valorAjuste: Number(variacion.valorAjuste),
+      priceStrategyType: variacion.priceStrategyType,
+      activa: !variacion.activa,
+    };
+    try {
+      await fetchJson(`/muebles/${state.selectedMuebleId}/variaciones/${variacionId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+      resetVariacionForm();
+      showToast(payload.activa ? "Variación activada" : "Variación desactivada");
+      loadMuebles();
+      loadVariaciones(state.selectedMuebleId);
+    } catch (error) {
+      showToast(error.message, "error");
+    }
+    return;
+  }
+
+  if (button.dataset.varAction === "delete") {
+    const confirmed = window.confirm("¿Eliminar esta variación?");
+    if (!confirmed) return;
+    try {
+      await fetchJson(`/muebles/${state.selectedMuebleId}/variaciones/${variacionId}`, { method: "DELETE" });
+      if (state.editingVariacionId === variacionId) {
+        resetVariacionForm();
+      }
+      showToast("Variación eliminada");
+      loadMuebles();
+      loadVariaciones(state.selectedMuebleId);
+    } catch (error) {
+      showToast(error.message, "error");
     }
   }
 });
@@ -792,6 +998,8 @@ const init = () => {
   if (elements.searchMuebles) {
     elements.searchMuebles.value = state.filters.search;
   }
+  resetMuebleForm();
+  resetVariacionForm();
   updateVariacionesToggleLabel();
   loadMuebles();
   loadCotizaciones();
