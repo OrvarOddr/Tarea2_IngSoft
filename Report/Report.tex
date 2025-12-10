@@ -100,6 +100,16 @@ La aplicación debía permitir:
 Se implementó una API REST con \textbf{Spring Boot 3.5} y \textbf{Java 21}, organizada en capas (Controller $\rightarrow$ Service $\rightarrow$ Repository). Se usaron DTOs y mapeadores para desacoplar la API de las entidades JPA. El repositorio completo se encuentra en:\\[0.2cm]
 \href{https://github.com/OrvarOddr/Tarea2_IngSoft}{\texttt{github.com/OrvarOddr/Tarea2\_IngSoft}}
 
+\subsection*{Dependencias y stack}
+\begin{itemize}[leftmargin=*]
+    \item Spring Boot Starters: \texttt{spring-boot-starter-web}, \texttt{spring-boot-starter-data-jpa}, \texttt{spring-boot-starter-validation}.
+    \item Base de datos: \texttt{mysql-connector-j} (runtime) y \texttt{h2} para pruebas.
+    \item Testing: \texttt{spring-boot-starter-test} (JUnit 5, AssertJ, Mockito). Mock-maker inline habilitado para Java 21.
+    \item Build: Maven Wrapper (\texttt{./mvnw}) y configuración de Surefire con \texttt{-Djdk.attach.allowAttachSelf=true}.
+\end{itemize}
+
+\newpage
+
 \subsection*{Modelo de dominio}
 El dominio principal se basa en cuatro entidades: \texttt{Mueble}, \texttt{Variacion}, \texttt{Cotizacion} y \texttt{CotizacionItem}. El mueble contiene los atributos de catálogo y se relaciona con sus variaciones:
 \begin{lstlisting}[language=Java, caption={Entidad Mueble con atributos de catálogo}]
@@ -210,17 +220,49 @@ public class MuebleController {
 }
 \end{lstlisting}
 
-\subsection*{Persistencia y datos iniciales}
-La configuración de base de datos reside en \texttt{application.properties}, con credenciales sobreescribibles por variables de entorno. El archivo \texttt{data.sql} carga datos de inicio (muebles, variaciones y cotizaciones) para validar rápidamente el flujo en local o con Docker Compose.
+\newpage
+
+\subsection*{Persistencia, datos iniciales y despliegue}
+La configuración de base de datos reside en \texttt{application.properties}, con credenciales sobreescribibles por variables de entorno (\texttt{SPRING\_DATASOURCE\_URL},\\ \texttt{SPRING\_DATASOURCE\_USERNAME}, \texttt{SPRING\_DATASOURCE\_PASSWORD}, \\ \texttt{SPRING\_JPA\_HIBERNATE\_DDL\_AUTO}, \texttt{SERVER\_PORT}). El archivo \texttt{data.sql} limpia y carga datos de inicio: 8 muebles de distintos tipos/tamaños/estados y 12 variaciones (aditivas, porcentuales y ninguna) para probar rápido el flujo.
+
+Para reproducir el ambiente se usa \texttt{docker-compose.yml} con tres servicios: \texttt{mysql} (puerto 3306, credenciales \texttt{muebles\_user}/\texttt{muebles\_pass}), \texttt{app} (Spring Boot en puerto 8081) y \texttt{frontend} (Nginx sirviendo los HTML en puerto 5173). Si se desea, se puede agregar un \texttt{.env} en la raíz para credenciales de MySQL y sobreescribir las variables del compose.
 
 \subsection*{Patrones de diseño aplicados}
 \begin{itemize}
     \item \textbf{Strategy + Factory}: cada variación de precio implementa \texttt{PriceCalculator}; la \texttt{PriceCalculatorFactory} selecciona la estrategia sin \texttt{switch} en servicios, facilitando extensiones.
-    \item \textbf{Service Layer}: los servicios encapsulan reglas de negocio (validación de stock, estados y pertenencia de variaciones) y mantienen los controladores delgados.
+    \item \textbf{Service Layer}: los servicios encapsulan reglas de negocio (validación de stock, estados y pertenencia de variaciones) y mantienen los controladores delgados. Ejemplo: \texttt{CotizacionService.confirmarCotizacion} aplica transacción, valida estado y descuenta stock en un solo punto.
     \item \textbf{DTO + Mapper}: se usan DTOs de request/response y mapeadores para no exponer entidades JPA y garantizar contratos estables en la API.
     \item \textbf{Repository (Spring Data JPA)}: acceso a datos desacoplado de la lógica; los repositorios definen solo interfaces, delegando la implementación a Spring.
     \item \textbf{Exception Handling centralizado}: \texttt{GlobalExceptionHandler} traduce excepciones de negocio a respuestas HTTP coherentes, manteniendo controladores limpios.
 \end{itemize}
+
+\subsection*{API resumida}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Muebles}:
+    \begin{itemize}[leftmargin=0.6cm]
+        \item \texttt{GET /api/muebles?estado=} lista catálogo (opcional filtro por estado).
+        \item \texttt{POST /api/muebles} crea un mueble.
+        \item \texttt{PUT /api/muebles/\{id\}} actualiza datos.
+        \item \texttt{PATCH /api/muebles/\{id\}/estado} cambia estado (activo/inactivo).
+    \end{itemize}
+    \item \textbf{Variaciones}:
+    \begin{itemize}[leftmargin=0.6cm]
+        \item \texttt{GET /api/muebles/\{id\}/variaciones} lista variaciones del mueble.
+        \item \texttt{POST /api/muebles/\{id\}/variaciones} crea una variación.
+        \item \texttt{PUT /api/muebles/\{id\}/variaciones/\{varId\}} actualiza.
+        \item \texttt{DELETE /api/muebles/\{id\}/variaciones/\{varId\}} elimina.
+    \end{itemize}
+    \item \textbf{Cotizaciones}:
+    \begin{itemize}[leftmargin=0.6cm]
+        \item \texttt{POST /api/cotizaciones} crea una cotización.
+        \item \texttt{GET /api/cotizaciones} lista cotizaciones.
+        \item \texttt{POST /api/cotizaciones/\{id\}/confirmar} confirma y descuenta stock.
+        \item \texttt{POST /api/cotizaciones/\{id\}/cancelar} cancela.
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Frontend}
+El frontend estático (carpeta \texttt{frontend/}) incluye vistas de catálogo, variaciones, estadísticas y cotizaciones. Se sirve con Nginx (puerto 5173 en Docker) y consume la API en \texttt{/api}; permite crear/editar muebles y variaciones, armar cotizaciones y confirmar ventas mostrando validaciones de stock.
 
 \newpage
 
@@ -229,6 +271,8 @@ Se creó una batería de \textbf{JUnit 5} que verifica tanto la lógica de negoc
 \begin{itemize}
     \item \texttt{PriceCalculatorFactoryTest} comprueba que cada estrategia calcule el precio correcto y que exista un fallback seguro al tipo \texttt{NONE}.
     \item \texttt{CotizacionServiceTest} cubre creación de cotizaciones con variaciones, confirmación que descuenta stock y errores por inventario insuficiente.
+    \item \texttt{MuebleServiceTest} valida creación/actualización de catálogo y cambios de estado.
+    \item \texttt{MuebleshermanosApplicationTests} asegura que el contexto Spring arranca correctamente.
 \end{itemize}
 
 \begin{lstlisting}[language=Java, caption={Prueba de cálculo porcentual y fallback}]
@@ -247,7 +291,7 @@ void usaEstrategiaPorDefectoCuandoNoExiste() {
 }
 \end{lstlisting}
 
-Todas las pruebas se ejecutan con una base H2 aislada y se disparan mediante \texttt{./mvnw test}, generando reportes en \texttt{target/surefire-reports/}.
+Todas las pruebas se ejecutan con una base H2 aislada y el perfil de pruebas definido en \texttt{src/test/resources/application.properties}. Se disparan mediante \texttt{./mvnw test}, generando reportes en \texttt{target/surefire-reports/}.
 
 \newpage
 
@@ -259,12 +303,12 @@ Todas las pruebas se ejecutan con una base H2 aislada y se disparan mediante \te
     \begin{enumerate}[label=\arabic*., leftmargin=0.85cm]
         \item Construir y levantar:\\\texttt{docker compose build}\\\texttt{docker compose up -d}
         \item Ver logs de arranque: \texttt{docker compose logs app -f}
-        \item Servicios: backend \texttt{http://localhost:8080}; MySQL \texttt{mysql://localhost:3306}\\(usuario/clave \texttt{muebles\_user}/\texttt{muebles\_pass})
+        \item Servicios: backend \texttt{http://localhost:8081}; frontend \texttt{http://localhost:5173}; MySQL \texttt{mysql://localhost:3306}\\(usuario/clave \texttt{muebles\_user}/\texttt{muebles\_pass})
         \item Para detener y limpiar: \texttt{docker compose down -v}
     \end{enumerate}
     \item \textbf{Ejecución local (sin Docker)}:
     \begin{enumerate}[label=\arabic*., leftmargin=0.85cm]
-        \item MySQL operativo; credenciales opcionales vía ambiente \texttt{SPRING\_DATASOURCE\_\{URL,USERNAME,PASSWORD\}}.
+        \item MySQL operativo; credenciales opcionales vía ambiente\\ \texttt{SPRING\_DATASOURCE\_\{URL,USERNAME,PASSWORD\}}.
         \item API con datos precargados: \texttt{./mvnw spring-boot:run}\\Puerto \textbf{8081} (cambiable con \texttt{SERVER\_PORT=8080 ./mvnw spring-boot:run}).
     \end{enumerate}
     \item \textbf{Frontend estático}: \texttt{frontend/} consume \texttt{/api}. Servir con \texttt{python3 -m http.server --directory frontend 5173}\\o \texttt{npx serve frontend}. Por defecto llama a \texttt{http://localhost:8081/api}.
